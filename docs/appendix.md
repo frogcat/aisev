@@ -1,5 +1,3 @@
-[English version is here.](appendix-en.md)
-
 # 付録 概要
 
 付録には、利用手順書を補足する情報を記載しています。

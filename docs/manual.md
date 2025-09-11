@@ -1,5 +1,3 @@
-[English version is here.](manual-en.md)
-
 # 利用手順書 概要
 
 本手順書では、AIセーフティ評価環境の利用手順を説明します。
