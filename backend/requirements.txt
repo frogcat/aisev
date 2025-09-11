@@ -1,0 +1,17 @@
+pytest==8.3.5
+fastapi==0.115.12
+httpx==0.28.1
+uvicorn==0.34.2
+SQLAlchemy==2.0.41
+loguru==0.7.3
+inspect_ai==0.3.99
+dotenv==0.9.9
+pytest-asyncio==1.0.0
+openai==1.82.0
+datasets==4.0.0
+python-multipart==0.0.20
+pytest-html==4.1.1
+py==1.11.0
+requests==2.32.4
+pg8000==1.31.4
+

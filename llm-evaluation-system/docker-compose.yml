@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  manager-backend:
+    build:
+      context: ./manager-backend
+      dockerfile: Dockerfile
+    container_name: manager-backend
+    environment:
+      - AUTOMATED_RT_IMAGE=automated-rt-app:latest
+      - HOST=localhost     # Specify external address for production if needed
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "5010:5010"        # REST endpoint of API server (FastAPI)
+
+  automated-rt-app:
+    build:
+      context: ./automated_rt
+      dockerfile: Dockerfile
+    image: automated-rt-app:latest

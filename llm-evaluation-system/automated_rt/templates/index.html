@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIセーフティ評価 自動レッドチーミング</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <style>
+        .step-container {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+        }
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .modal-xl {
+            max-width: 1140px;
+        }
+        /* Japanese font settings */
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4 text-center">AIセーフティ評価 自動レッドチーミング</h1>
+        
+        <!-- Current session information -->
+        <div class="alert alert-info" id="sessionAlert" style="display: none;">
+            <strong>現在のセッション:</strong> <span id="currentSessionId"></span>
+            <a href="/past_results" class="btn btn-sm btn-primary float-end">過去の評価結果を表示</a>
+        </div>
+        
+        <!-- Step navigation -->
+        <div class="card mb-4" id="stepNavigation" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">ステップナビゲーション</h5>
+            </div>
+            <div class="card-body">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-primary" id="navToStep1" disabled>1. LLM設定</button>
+                    <button type="button" class="btn btn-outline-primary" id="navToStep2" disabled>2. ドキュメント</button>
+                    <button type="button" class="btn btn-outline-primary" id="navToStep3" disabled>3. 要件生成</button>
+                    <button type="button" class="btn btn-outline-primary" id="navToStep4" disabled>4. 敵対的プロンプト</button>
+                    <button type="button" class="btn btn-outline-primary" id="navToStep5" disabled>5. 評価実行</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 1: Setting up LLM -->
+        <div class="step-container" id="step1">
+            <div class="step-header mb-3">
+                <span class="step-number">1</span>
+                <span class="step-title">LLMの設定</span>
+            </div>
+            <p class="text-muted">評価に使用する各LLMの設定を行います。</p>
+            
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#llmSetupModal">
+                LLM設定モーダルを開く
+            </button>
+        </div>
+        
+        <!-- Step 2: Upload documents -->
+        <div class="step-container" id="step2" style="display: none;">
+            <div class="step-header mb-3">
+                <span class="step-number">2</span>
+                <span class="step-title">ドキュメントのアップロード</span>
+            </div>
+            <p class="text-muted">ターゲットAIのドメイン情報を含むドキュメントをアップロードします（オプション）。</p>
+            
+            <form id="documentUploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="documentFile" class="form-label">ドキュメントファイル（PDF）:</label>
+                    <input type="file" class="form-control" id="documentFile" name="file" accept=".pdf">
+                </div>
+                <button type="submit" class="btn btn-primary">アップロード</button>
+            </form>
+            
+            <div class="mt-3">
+                <h5>アップロード済みドキュメント:</h5>
+                <ul id="uploadedDocuments" class="list-group">
+                    <!-- A list of uploaded documents will be displayed here -->
+                </ul>
+            </div>
+            
+            <button class="btn btn-success mt-3" id="continueToStep3">次のステップへ進む</button>
+        </div>
+        
+        <!-- Step 3: Generate requirements -->
+        <div class="step-container" id="step3" style="display: none;">
+            <div class="step-header mb-3">
+                <span class="step-number">3</span>
+                <span class="step-title">要件の生成</span>
+            </div>
+            <p class="text-muted">ターゲットAIが満たすべき安全要件を生成します。</p>
+            
+            <form id="requirementsForm">
+                <div class="mb-3">
+                    <label for="targetPurpose" class="form-label">ターゲットAIの使用目的:</label>
+                    <textarea class="form-control" id="targetPurpose" rows="3"></textarea>
+                    <small class="text-muted">例: このLLMは顧客サポートチャットボットとして使用され、製品情報の提供や一般的な質問に回答します。</small>
+                </div>
+                <div class="mb-3">
+                    <label for="numRequirements" class="form-label">生成する要件の数:</label>
+                    <input type="number" class="form-control" id="numRequirements" min="1" max="100" value="10">
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="useDocuments" checked>
+                    <label class="form-check-label" for="useDocuments">アップロードしたドキュメントを使用する</label>
+                </div>
+                <button type="submit" class="btn btn-primary">要件を生成</button>
+            </form>
+            
+            <div class="mt-3" id="requirementsResult" style="display: none;">
+                <h5>生成された要件:</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>カテゴリ</th>
+                                <th>要件</th>
+                                <th>理由</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requirementsTable">
+                            <!-- The generated requirements are displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-success mt-3" id="continueToStep4">次のステップへ進む</button>
+            </div>
+        </div>
+        
+        <!-- Step 4: Generate adversarial prompts -->
+        <div class="step-container" id="step4" style="display: none;">
+            <div class="step-header mb-3">
+                <span class="step-number">4</span>
+                <span class="step-title">敵対的プロンプトの生成</span>
+            </div>
+            <p class="text-muted">各要件に対する敵対的プロンプトを生成します。</p>
+            
+            <form id="adversarialPromptForm">
+                <div class="mb-3">
+                    <label for="promptsPerRequirement" class="form-label">要件ごとに生成するプロンプト数:</label>
+                    <input type="number" class="form-control" id="promptsPerRequirement" min="1" max="10" value="3">
+                </div>
+                <button type="submit" class="btn btn-primary">敵対的プロンプトを生成</button>
+            </form>
+            
+            <div class="mt-3" id="adversarialPromptsResult" style="display: none;">
+                <h5>生成された敵対的プロンプト:</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>カテゴリ</th>
+                                <th>要件</th>
+                                <th>敵対的プロンプト</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adversarialPromptsTable">
+                            <!-- The generated adversarial prompts are displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-success mt-3" id="continueToStep5">次のステップへ進む</button>
+            </div>
+        </div>
+        
+        <!-- Step 5: Execute evaluation -->
+        <div class="step-container" id="step5" style="display: none;">
+            <div class="step-header mb-3">
+                <span class="step-number">5</span>
+                <span class="step-title">評価の実行</span>
+            </div>
+            <p class="text-muted">ターゲットAIに対して敵対的プロンプトを実行し、応答を評価します。</p>
+            
+            <form id="evaluationForm">
+                <button type="submit" class="btn btn-danger">評価を実行</button>
+            </form>
+            
+            <div class="mt-3" id="evaluationProgress" style="display: none;">
+                <div class="progress mb-2">
+                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                <p class="text-center">進捗状況: <span id="completedPrompts">0</span> / <span id="totalPrompts">0</span> プロンプト完了</p>
+                <p class="text-center" id="estimatedTimeRemaining"></p>
+            </div>
+            
+            <div class="mt-3" id="evaluationResult" style="display: none;">
+                <div class="alert alert-success">
+                    <h5>評価サマリー:</h5>
+                    <p>総テスト数: <span id="totalTests">0</span></p>
+                    <p>合格: <span id="passedTests">0</span> (<span id="passRate">0%</span>)</p>
+                    <p>不合格: <span id="failedTests">0</span></p>
+                    <p>エラー: <span id="errorTests">0</span></p>
+                </div>
+                
+                <div class="mt-3">
+                    <h5>カテゴリ別結果:</h5>
+                    <div id="categoryStats">
+                        <!-- Category statistics are displayed here -->
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary mt-3" id="viewDetailedResults">詳細結果を表示</button>
+            </div>
+        </div>
+        
+
+    
+    <!-- LLM settings modal -->
+    <div class="modal fade" id="llmSetupModal" tabindex="-1" aria-labelledby="llmSetupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="llmSetupModalLabel">LLM設定</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="llmSetupForm">
+                        <div class="row">
+                            <!-- Requirements Generation AI settings -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                        <span>要件生成AI</span>
+                                        <button type="button" class="btn btn-sm btn-light" id="copyFromReqLlm" disabled>設定をコピー</button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="reqLlmProvider" class="form-label">プロバイダー:</label>
+                                            <select class="form-select" id="reqLlmProvider" required>
+                                                <option value="openai">OpenAI</option>
+                                                <option value="azure">Azure OpenAI</option>
+                                                <option value="huggingface">Hugging Face</option>
+                                                <option value="ollama">Ollama</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="reqLlmModel" class="form-label">モデル名:</label>
+                                            <input type="text" class="form-control" id="reqLlmModel" value={{default_requirement_model}} required>
+                                            <small class="text-muted hf-info" style="display: none;">Hugging Faceの場合、デフォルトは "meta-llama/Meta-Llama-3-8B-Instruct"</small>
+                                            <small class="text-muted ollama-info" style="display: none;">Ollamaの場合、デフォルトは "llama3" または "llama3:8b"</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="reqLlmApiKey" class="form-label">APIキー (オプション):</label>
+                                            <input type="password" class="form-control" id="reqLlmApiKey">
+                                            <small class="text-muted">環境変数から取得する場合は空欄</small>
+                                        </div>
+                                        <div class="mb-3 azure-only" style="display: none;">
+                                            <label for="reqLlmApiBase" class="form-label">APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="reqLlmApiBase">
+                                        </div>
+                                        <div class="mb-3 ollama-only" style="display: none;">
+                                            <label for="reqLlmApiBase" class="form-label">Ollama APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="reqLlmApiBase" placeholder="http://localhost:11434">
+                                            <small class="text-muted">デフォルトは http://localhost:11434 です</small>
+                                        </div>
+                                        <div hidden class="mb-3">
+                                            <label for="reqLlmSystemPrompt" class="form-label">追加システムプロンプト (オプション):</label>
+                                            <textarea class="form-control" id="reqLlmSystemPrompt" rows="3" placeholder="基本のシステムプロンプトに追加で指示したい内容があれば入力してください"></textarea>
+                                            <small class="text-muted">ここに入力された内容は、基本のシステムプロンプトに追加されます。</small>
+                                        </div>
+                                        
+                                        <div hidden class="accordion mt-3" id="reqPromptAccordion">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reqBaseSystemPrompt" aria-expanded="false" aria-controls="reqBaseSystemPrompt">
+                                                        ベースシステムプロンプトの編集（上級者向け）
+                                                    </button>
+                                                </h2>
+                                                <div id="reqBaseSystemPrompt" class="accordion-collapse collapse" data-bs-parent="#reqPromptAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="alert alert-warning">
+                                                            <strong>注意:</strong> ベースシステムプロンプトを編集すると、要件生成の動作に不具合が生じる可能性があります。何をしているか理解している場合のみ編集してください。
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <textarea class="form-control" id="reqLlmBaseSystemPrompt" rows="10">{{requirement_base_system_prompt}}</textarea>
+                                                        </div>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetReqBaseSystemPrompt">デフォルトに戻す</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reqUserPromptTemplate" aria-expanded="false" aria-controls="reqUserPromptTemplate">
+                                                        ユーザープロンプトテンプレートの編集（上級者向け）
+                                                    </button>
+                                                </h2>
+                                                <div id="reqUserPromptTemplate" class="accordion-collapse collapse" data-bs-parent="#reqPromptAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="alert alert-warning">
+                                                            <strong>注意:</strong> ユーザープロンプトテンプレートを編集すると、要件生成の動作に不具合が生じる可能性があります。何をしているか理解している場合のみ編集してください。
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <p><strong>使用可能なプレースホルダー:</strong></p>
+                                                            <ul>
+                                                                <li><code>{target_purpose}</code> - ターゲットAIの使用目的</li>
+                                                                <li><code>{documents_text}</code> - アップロードされたドキュメントのテキスト</li>
+                                                                <li><code>{num_requirements}</code> - 生成する要件の数</li>
+                                                            </ul>
+                                                            <textarea class="form-control" id="reqLlmUserPromptTemplate" rows="10">{{requirement_base_user_prompt}}</textarea>
+                                                        </div>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetReqUserPromptTemplate">デフォルトに戻す</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Adversarial Prompts Generation AI settings -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                                        <span>敵対的プロンプト生成AI</span>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-light me-1" id="copyToAdvFromReq">要件AIから</button>
+                                            <button type="button" class="btn btn-sm btn-light" id="copyFromAdvLlm" disabled>設定をコピー</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="advLlmProvider" class="form-label">プロバイダー:</label>
+                                            <select class="form-select" id="advLlmProvider" required>
+                                                <option value="openai">OpenAI</option>
+                                                <option value="azure">Azure OpenAI</option>
+                                                <option value="huggingface">Hugging Face</option>
+                                                <option value="ollama">Ollama</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="advLlmModel" class="form-label">モデル名:</label>
+                                            <input type="text" class="form-control" id="advLlmModel" value={{default_adversarial_model}} required>
+                                            <small class="text-muted hf-info" style="display: none;">Hugging Faceの場合、デフォルトは "meta-llama/Meta-Llama-3-8B-Instruct"</small>
+                                            <small class="text-muted ollama-info" style="display: none;">Ollamaの場合、デフォルトは "llama3" または "llama3:8b"</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="advLlmApiKey" class="form-label">APIキー (オプション):</label>
+                                            <input type="password" class="form-control" id="advLlmApiKey">
+                                        </div>
+                                        <div class="mb-3 azure-only" style="display: none;">
+                                            <label for="advLlmApiBase" class="form-label">APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="advLlmApiBase">
+                                        </div>
+                                        <div class="mb-3 ollama-only" style="display: none;">
+                                            <label for="advLlmApiBase" class="form-label">Ollama APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="advLlmApiBase" placeholder="http://localhost:11434">
+                                            <small class="text-muted">デフォルトは http://localhost:11434 です</small>
+                                        </div>
+                                        <div hidden class="mb-3">
+                                            <label for="advLlmSystemPrompt" class="form-label">追加システムプロンプト (オプション):</label>
+                                            <textarea class="form-control" id="advLlmSystemPrompt" rows="3" placeholder="基本のシステムプロンプトに追加で指示したい内容があれば入力してください"></textarea>
+                                            <small class="text-muted">ここに入力された内容は、基本のシステムプロンプトに追加されます。</small>
+                                        </div>
+                                        
+                                        <div hidden class="accordion mt-3" id="advPromptAccordion">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advBaseSystemPrompt" aria-expanded="false" aria-controls="advBaseSystemPrompt">
+                                                        ベースシステムプロンプトの編集（上級者向け）
+                                                    </button>
+                                                </h2>
+                                                <div id="advBaseSystemPrompt" class="accordion-collapse collapse" data-bs-parent="#advPromptAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="alert alert-warning">
+                                                            <strong>注意:</strong> ベースシステムプロンプトを編集すると、敵対的プロンプト生成の動作に不具合が生じる可能性があります。何をしているか理解している場合のみ編集してください。
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <textarea class="form-control" id="advLlmBaseSystemPrompt" rows="10">{{adversarial_base_system_prompt}}</textarea>
+                                                        </div>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetAdvBaseSystemPrompt">デフォルトに戻す</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advUserPromptTemplate" aria-expanded="false" aria-controls="advUserPromptTemplate">
+                                                        ユーザープロンプトテンプレートの編集（上級者向け）
+                                                    </button>
+                                                </h2>
+                                                <div id="advUserPromptTemplate" class="accordion-collapse collapse" data-bs-parent="#advPromptAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="alert alert-warning">
+                                                            <strong>注意:</strong> ユーザープロンプトテンプレートを編集すると、敵対的プロンプト生成の動作に不具合が生じる可能性があります。何をしているか理解している場合のみ編集してください。
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <p><strong>使用可能なプレースホルダー:</strong></p>
+                                                            <ul>
+                                                                <li><code>{target_purpose}</code> - ターゲットAIの使用目的</li>
+                                                                <li><code>{category}</code> - 要件のカテゴリ</li>
+                                                                <li><code>{requirement}</code> - 要件の説明</li>
+                                                                <li><code>{prompts_per_requirement}</code> - 生成する敵対的プロンプトの数</li>
+                                                            </ul>
+                                                            <textarea class="form-control" id="advLlmUserPromptTemplate" rows="10">{{adversarial_base_user_prompt}}</textarea>
+                                                        </div>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetAdvUserPromptTemplate">デフォルトに戻す</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Response Evaluation AI settings -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <span>応答評価AI</span>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-light me-1" id="copyToEvalFromReq">要件AIから</button>
+                                            <button type="button" class="btn btn-sm btn-light me-1" id="copyToEvalFromAdv">敵対AIから</button>
+                                            <button type="button" class="btn btn-sm btn-light" id="copyFromEvalLlm" disabled>設定をコピー</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="evalLlmProvider" class="form-label">プロバイダー:</label>
+                                            <select class="form-select" id="evalLlmProvider" required>
+                                                <option value="openai">OpenAI</option>
+                                                <option value="azure">Azure OpenAI</option>
+                                                <option value="huggingface">Hugging Face</option>
+                                                <option value="ollama">Ollama</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="evalLlmModel" class="form-label">モデル名:</label>
+                                            <input type="text" class="form-control" id="evalLlmModel" value={{default_evaluation_model}} required>
+                                            <small class="text-muted hf-info" style="display: none;">Hugging Faceの場合、デフォルトは "meta-llama/Meta-Llama-3-8B-Instruct"</small>
+                                            <small class="text-muted ollama-info" style="display: none;">Ollamaの場合、デフォルトは "llama3" または "llama3:8b"</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="evalLlmApiKey" class="form-label">APIキー (オプション):</label>
+                                            <input type="password" class="form-control" id="evalLlmApiKey">
+                                        </div>
+                                        <div class="mb-3 azure-only" style="display: none;">
+                                            <label for="evalLlmApiBase" class="form-label">APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="evalLlmApiBase">
+                                        </div>
+                                        <div class="mb-3 ollama-only" style="display: none;">
+                                            <label for="evalLlmApiBase" class="form-label">Ollama APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="evalLlmApiBase" placeholder="http://localhost:11434">
+                                            <small class="text-muted">デフォルトは http://localhost:11434 です</small>
+                                        </div>
+                                        <div hidden class="mb-3">
+                                            <label for="evalLlmSystemPrompt" class="form-label">追加システムプロンプト (オプション):</label>
+                                            <textarea class="form-control" id="evalLlmSystemPrompt" rows="3" placeholder="基本のシステムプロンプトに追加で指示したい内容があれば入力してください"></textarea>
+                                            <small class="text-muted">ここに入力された内容は、基本のシステムプロンプトに追加されます。</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Target AI settings -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+                                        <span>ターゲットAI</span>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-light me-1" id="copyToTargetFromReq">要件AIから</button>
+                                            <button type="button" class="btn btn-sm btn-light me-1" id="copyToTargetFromAdv">敵対AIから</button>
+                                            <button type="button" class="btn btn-sm btn-light" id="copyToTargetFromEval">評価AIから</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="targetLlmProvider" class="form-label">プロバイダー:</label>
+                                            <select class="form-select" id="targetLlmProvider" required>
+                                                <option value="openai">OpenAI</option>
+                                                <option value="azure">Azure OpenAI</option>
+                                                <option value="huggingface">Hugging Face</option>
+                                                <option value="ollama">Ollama</option>
+                                                <option value="custom_endpoint">カスタムエンドポイント</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="targetLlmModel" class="form-label">モデル名:</label>
+                                            <input type="text" class="form-control" id="targetLlmModel" value={{default_target_model}} required>
+                                            <small class="text-muted hf-info" style="display: none;">Hugging Faceの場合、デフォルトは "meta-llama/Meta-Llama-3-8B-Instruct"</small>
+                                            <small class="text-muted ollama-info" style="display: none;">Ollamaの場合、デフォルトは "llama3" または "llama3:8b"</small>
+                                            <small class="text-muted custom-endpoint-only" style="display: none;">カスタムエンドポイントの場合は任意の値を設定できます</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="targetLlmApiKey" class="form-label">APIキー (オプション):</label>
+                                            <input type="password" class="form-control" id="targetLlmApiKey">
+                                        </div>
+                                        <div class="mb-3 azure-only" style="display: none;">
+                                            <label for="targetLlmApiBase" class="form-label">APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="targetLlmApiBase">
+                                        </div>
+                                        <div class="mb-3 ollama-only" style="display: none;">
+                                            <label for="targetLlmApiBase" class="form-label">Ollama APIエンドポイント:</label>
+                                            <input type="text" class="form-control" id="targetLlmApiBase" placeholder="http://localhost:11434">
+                                            <small class="text-muted">デフォルトは http://localhost:11434 です</small>
+                                        </div>
+                                        
+                                        <!-- カスタムエンドポイント固有の設定フィールド -->
+                                        <div class="mb-3 custom-endpoint-only" style="display: none;">
+                                            <label for="targetLlmCustomEndpointUrl" class="form-label">エンドポイントURL:</label>
+                                            <input type="text" class="form-control" id="targetLlmCustomEndpointUrl" placeholder="https://example.com/api/endpoint">
+                                            <small class="text-muted">例: https://hoge.azurewebsites.net/docsearch</small>
+                                        </div>
+                                    
+                                        <div class="mb-3 custom-endpoint-only" style="display: none;">
+                                            <label for="targetLlmTargetPrefix" class="form-label">ターゲットプレフィックス:</label>
+                                            <input type="text" class="form-control" id="targetLlmTargetPrefix" placeholder="hoge">
+                                        </div>
+                                    
+                                        <div class="mb-3 custom-endpoint-only" style="display: none;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="targetLlmUseProxy">
+                                                <label class="form-check-label" for="targetLlmUseProxy">プロキシを使用する</label>
+                                            </div>
+                                        </div>
+                                    
+                                        <div id="proxySettingsPanel" class="card mb-3" style="display: none;">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">プロキシ設定</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="targetLlmProxyUrl" class="form-label">プロキシURL:</label>
+                                                    <input type="text" class="form-control" id="targetLlmProxyUrl" placeholder="http://proxy.example.com:8080">
+                                                    <small class="text-muted">環境変数HTTP_PROXY/HTTPS_PROXYが設定されている場合、空白でも使用されます</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="targetLlmProxyUsername" class="form-label">プロキシユーザー名:</label>
+                                                    <input type="text" class="form-control" id="targetLlmProxyUsername">
+                                                    <small class="text-muted">環境変数PROXY_USERNAMEが設定されている場合、空白でも使用されます</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="targetLlmProxyPassword" class="form-label">プロキシパスワード:</label>
+                                                    <input type="password" class="form-control" id="targetLlmProxyPassword">
+                                                    <small class="text-muted">環境変数PROXY_PASSWORDが設定されている場合、空白でも使用されます</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="targetLlmSystemPrompt" class="form-label">システムプロンプト:</label>
+                                            <textarea class="form-control" id="targetLlmSystemPrompt" rows="3">{{target_sample_system_prompt}}</textarea>
+                                            <small class="text-muted">ターゲットAIは評価対象のため、システムプロンプトを自由に設定できます。</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="dropup me-auto">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportImportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            エクスポート/インポート
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="exportImportDropdown">
+                            <li><a class="dropdown-item" href="#" id="exportSettings">設定をエクスポート</a></li>
+                            <li><a class="dropdown-item" href="#" id="importSettings">設定をインポート</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="saveSettingsLocal">設定をブラウザに保存</a></li>
+                            <li><a class="dropdown-item" href="#" id="loadSettingsLocal">保存した設定を読み込む</a></li>
+                        </ul>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="saveLlmSetup">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+    // Automatically load settings saved when the page is loaded
+    if (localStorage.getItem('llmSettings')) {
+        try {
+            const settings = JSON.parse(localStorage.getItem('llmSettings'));
+            applyLlmSettings(settings);
+            showToast('情報', '保存済みの設定を読み込みました', 'info');
+        } catch (error) {
+            console.error('設定の自動読み込みエラー:', error);
+        }
+    }
+    
+    // Reset button settings
+    var org_prompt = "";
+    document.getElementById('resetReqBaseSystemPrompt').addEventListener('click', function() {
+        org_prompt = `{% autoescape false %}{{requirement_base_system_prompt}}{% endautoescape %}`;
+        document.getElementById('reqLlmBaseSystemPrompt').value = org_prompt;
+    });
+    
+    document.getElementById('resetReqUserPromptTemplate').addEventListener('click', function() {
+        org_prompt = `{% autoescape false %}{{requirement_base_user_prompt}}{% endautoescape %}`;
+        document.getElementById('reqLlmUserPromptTemplate').value = org_prompt;
+    });
+    
+    document.getElementById('resetAdvBaseSystemPrompt').addEventListener('click', function() {
+        org_prompt = `{% autoescape false %}{{adversarial_base_system_prompt}}{% endautoescape %}`;
+        document.getElementById('advLlmBaseSystemPrompt').value = org_prompt;
+    });
+    
+    document.getElementById('resetAdvUserPromptTemplate').addEventListener('click', function() {
+        org_prompt = `{% autoescape false %}{{adversarial_base_user_prompt}}{% endautoescape %}`;
+        document.getElementById('advLlmUserPromptTemplate').value = org_prompt;
+    });
+    
+    // Switch the display of provider-specific fields according to the change of provider
+    document.querySelectorAll('select[id$="LlmProvider"]').forEach(select => {
+        select.addEventListener('change', function() {
+            const parentCard = this.closest('.card');
+            const azureFields = parentCard.querySelectorAll('.azure-only');
+            const ollamaFields = parentCard.querySelectorAll('.ollama-only');
+            const hfInfos = parentCard.querySelectorAll('.hf-info');
+            const ollamaInfos = parentCard.querySelectorAll('.ollama-info');
+            const customEndpointFields = parentCard.querySelectorAll('.custom-endpoint-only');
+            const modelInput = parentCard.querySelector('input[id$="LlmModel"]');
+            
+            // Reset all fields
+            azureFields.forEach(field => field.style.display = 'none');
+            ollamaFields.forEach(field => field.style.display = 'none');
+            hfInfos.forEach(info => info.style.display = 'none');
+            ollamaInfos.forEach(info => info.style.display = 'none');
+            customEndpointFields.forEach(field => field.style.display = 'none');
+            
+            // Display provider-specific fields according to the selected provider
+            if (this.value === 'azure') {
+                azureFields.forEach(field => field.style.display = 'block');
+            } else if (this.value === 'ollama') {
+                ollamaFields.forEach(field => field.style.display = 'block');
+                ollamaInfos.forEach(info => info.style.display = 'block');
+                
+                // Set the default model name
+                if (modelInput.value === '{{default_requirement_model}}' || modelInput.value === '{{default_target_model}}') {
+                    modelInput.value = 'llama3';
+                }
+            } else if (this.value === 'huggingface') {
+                hfInfos.forEach(info => info.style.display = 'block');
+                
+                // Set the default model name
+                if (modelInput.value === '{{default_requirement_model}}' || modelInput.value === '{{default_target_model}}') {
+                    modelInput.value = 'meta-llama/Meta-Llama-3-8B-Instruct';
+                }
+            } else if (this.value === 'custom_endpoint') {
+                customEndpointFields.forEach(field => field.style.display = 'block');
+                
+                // Do not set anything in the model input field (any value is OK)
+                if (modelInput.value === '') {
+                    modelInput.value = 'custom';
+                }
+            } else if (this.value === 'openai') {
+                // Reset to OpenAI's default model
+                if (modelInput.value === 'llama3' || modelInput.value === 'meta-llama/Meta-Llama-3-8B-Instruct' || modelInput.value === 'custom') {
+                    const cardHeader = parentCard.querySelector('.card-header');
+                    if (cardHeader && cardHeader.textContent.includes('要件生成')) {
+                        modelInput.value = '{{default_requirement_model}}';
+                    } else if (cardHeader && cardHeader.textContent.includes('敵対的')) {
+                        modelInput.value = '{{default_adversarial_model}}';
+                    } else if (cardHeader && cardHeader.textContent.includes('評価')) {
+                        modelInput.value = '{{default_evaluation_model}}';
+                    } else {
+                        modelInput.value = '{{default_target_model}}';
+                    }
+                }
+            }
+        });
+    });
+    
+    // Change event of the proxy check box
+    if (document.getElementById('targetLlmUseProxy')) {
+        document.getElementById('targetLlmUseProxy').addEventListener('change', function() {
+            const proxySettingsPanel = document.getElementById('proxySettingsPanel');
+            if (proxySettingsPanel) {
+                if (this.checked) {
+                    proxySettingsPanel.style.display = 'block';
+                } else {
+                    proxySettingsPanel.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // LLM settings copy function
+    // Copy from Requirements Generation AI to Adversarial Prompts Generation AI
+    document.getElementById('copyToAdvFromReq').addEventListener('click', function() {
+        copyLlmSettings('req', 'adv');
+    });
+    
+    // Copy from Requirements Generation AI to Response Evaluation AI
+    document.getElementById('copyToEvalFromReq').addEventListener('click', function() {
+        copyLlmSettings('req', 'eval');
+    });
+    
+    // Copy from Adversarial Prompts Generation AI to Response Evaluation AI
+    document.getElementById('copyToEvalFromAdv').addEventListener('click', function() {
+        copyLlmSettings('adv', 'eval');
+    });
+    
+    // Copy from Requirements Generation AI to Target AI
+    document.getElementById('copyToTargetFromReq').addEventListener('click', function() {
+        copyLlmSettings('req', 'target');
+    });
+    
+    // Copy from Adversarial Prompts Generation AI to Target AI
+    document.getElementById('copyToTargetFromAdv').addEventListener('click', function() {
+        copyLlmSettings('adv', 'target');
+    });
+    
+    // Copy from Response Evaluation AI to Target AI
+    document.getElementById('copyToTargetFromEval').addEventListener('click', function() {
+        copyLlmSettings('eval', 'target');
+    });
+
+    // Step navigation settings
+    document.getElementById('navToStep1').addEventListener('click', function() {
+        navigateToStep(1);
+    });
+    
+    document.getElementById('navToStep2').addEventListener('click', function() {
+        navigateToStep(2);
+    });
+    
+    document.getElementById('navToStep3').addEventListener('click', function() {
+        navigateToStep(3);
+    });
+    
+    document.getElementById('navToStep4').addEventListener('click', function() {
+        navigateToStep(4);
+    });
+    
+    document.getElementById('navToStep5').addEventListener('click', function() {
+        navigateToStep(5);
+    });
+    
+    
+    // Export/Import function
+    document.getElementById('exportSettings').addEventListener('click', function() {
+        exportSettings();
+    });
+    
+    document.getElementById('importSettings').addEventListener('click', function() {
+        document.getElementById('importFile').click();
+    });
+    
+    document.getElementById('importFile').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            importSettings(e.target.files[0]);
+        }
+    });
+    
+    document.getElementById('saveSettingsLocal').addEventListener('click', function() {
+        saveSettingsToLocalStorage();
+    });
+    
+    document.getElementById('loadSettingsLocal').addEventListener('click', function() {
+        loadSettingsFromLocalStorage();
+    });
+    
+    // LLM Config Save Button
+    document.getElementById('saveLlmSetup').addEventListener('click', function() {
+        saveLlmSetup();
+    });
+
+    // Document Upload Form
+    document.getElementById('documentUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        uploadDocument();
+    });
+
+    // Button to proceed from Step 2 to 3
+    document.getElementById('continueToStep3').addEventListener('click', function() {
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'block';
+        updateNavigationButtons();
+    });
+
+    // Requirements Generation Form
+    document.getElementById('requirementsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateRequirements();
+    });
+
+    // Button to proceed from Step 3 to 4
+    document.getElementById('continueToStep4').addEventListener('click', function() {
+        document.getElementById('step3').style.display = 'none';
+        document.getElementById('step4').style.display = 'block';
+        updateNavigationButtons();
+    });
+
+    // Adversarial prompts generation form
+    document.getElementById('adversarialPromptForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateAdversarialPrompts();
+    });
+
+    // Button to proceed from Step 4 to step 5
+    document.getElementById('continueToStep5').addEventListener('click', function() {
+        document.getElementById('step4').style.display = 'none';
+        document.getElementById('step5').style.display = 'block';
+        updateNavigationButtons();
+    });
+
+    // Evaluation execution form
+    document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        runEvaluation();
+    });
+
+    // Detailed results display button
+    document.getElementById('viewDetailedResults').addEventListener('click', function() {
+        window.location.href = `/results/${currentSessionId}`;
+    });
+    
+    
+});
+    </script>
+</body>
+</html>
