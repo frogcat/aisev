@@ -63,7 +63,7 @@ AIセーフティ評価環境のAI情報登録・管理画面で登録するAI�
 
   ```json
   {
-    "model": "gpt-4o-mini",
+    "model": "gpt-4o",
     "messages": [
       { "role": "system", "content": "あなたは有能なアシスタントです。" },
       { "role": "user", "content": "明日の東京の天気を教えてください。" }
@@ -77,7 +77,7 @@ AIセーフティ評価環境のAI情報登録・管理画面で登録するAI�
   }
   ```
 
-  - **model**: [ 必須 ] 使用するモデル名 (`gpt-4o-mini`／`gpt-4o`／`gpt-3.5-turbo`など)
+  - **model**: [ 必須 ] 使用するモデル名 (`gpt-5-mini`／`gpt-4o`／`gpt-3.5-turbo`など)
   - **messages**: [ 必須 ] やり取りのリスト
     - **role**: `system`／`user`／`assistant`
     - **content**: 発話内容
@@ -96,7 +96,7 @@ AIセーフティ評価環境のAI情報登録・管理画面で登録するAI�
     "id": "chatcmpl-7XyZAbCdEfGhIjK",
     "object": "chat.completion",
     "created": 1710000000,
-    "model": "gpt-4o-mini",
+    "model": "gpt-4o",
     "usage": {
       "prompt_tokens": 25,
       "completion_tokens": 40,
@@ -137,7 +137,7 @@ AIセーフティ評価環境のAI情報登録・管理画面で登録するAI�
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
     -d '{
-      "model": "gpt-4o-mini",
+      "model": "gpt-4o",
       "messages": [
         {"role": "system",  "content": "あなたは有能なアシスタントです。"},
         {"role": "user",    "content": "パスタのレシピを教えてください。"}
@@ -154,13 +154,13 @@ AIセーフティ評価環境のAI情報登録・管理画面で登録するAI�
 一例として、LM Studioとopen-ai/gpt-oss-20bの組み合わせでローカル環境で運用されているAIを本ツールの評価対象とするために、AI情報登録する場合の例を示します。
 
   1. LM StudioをDeveloperとしてインストールし、Developer画面でサーバを起動し、APIを受け付け可能な状態にします。
-     - 例として、IPアドレスが"192.168.10.13"で、ポートが"1234"の場合、ベースのURLは"http://192.168.10.13:1234/v1/"となります。
+     - 例として、IPアドレスが"192.168.10.13"で、ポートが"1234"の場合、ベースのURLは "http://192.168.10.13:1234/v1/" となります。
      - LM Studioの利用方法の詳細については、LM Studioのサイトを参照してください。
   2. 「AI情報登録」画面にて、以下のように、 AI モデルを更新する場合は「 AI 情報更新」のタブをクリックします。
      - **AI 情報ラベル:** 任意の識別名を入力してください。（例：ai_local_gpt-oss-20b）
-     - **モデル名:** LM Studioインストール時に標準的な方法でgpt-oss-20bをインストールした場合、"openai/gpt-oss-20b"となります。
-     - **URL:** 上記のLM Studioの設定から特定したベースURLを入力してください。（例：http://192.168.10.13:1234/v1/）
-     - **APIキー:** このケースではAPIキーは使用しませんが、"Key"と入力してください。
+     - **モデル名:** LM Studioインストール時に標準的な方法でgpt-oss-20bをインストールした場合、 "openai/gpt-oss-20b" となります。
+     - **URL:** 上記のLM Studioの設定から特定したベースURLを入力してください。（例： http://192.168.10.13:1234/v1/ ）
+     - **APIキー:** このケースではAPIキーは使用しませんが、 "Key" と入力してください。
   3. 各項目の入力が完了後、「登録」ボタンを押下してください。
      - 正常に登録されると、画面下部に完了メッセージが表示されます。
   4. 以降、登録したAI情報を評価実施者向け画面で評価対象AI情報に指定することで、評価対象とすることができます。
