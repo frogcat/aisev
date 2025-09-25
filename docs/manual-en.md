@@ -15,7 +15,7 @@ Please set up the AI Safety Evaluation Environment on the corresponding operatin
 ### Runtime Environment
 
 The AI Safety Evaluation Environment runs on a Docker Container, so it will run on any environment where Docker is operational.
-The following are the confirmed operating environments. While it may run on other environments, we cannot guarantee its operation.
+The following are the confirmed operating environments. While it may run on other environments, AISI cannot guarantee its operation.
 
    - **OS:** Windows 11, MacOS(Sequoia)
    - **Python:** Python 3.12.7
@@ -33,19 +33,22 @@ Before setting up the AI Safety Evaluation Environment, Rancher Desktop should b
 Open the terminal (for Windows, PowerShell) and execute the following command to download the AI Safety Evaluation Environment.
 
    ```
-    git clone ***
+    git clone https://github.com/Japan-AISI/aisev.git
    ```
-   - If the git command is unavailable, you can also download the entire source code as a zip file from the GitHub repository.
+   - If the git command is unavailable, you can also download the entire source code as a zip file. Click “Code” in the upper-right corner of the file list on the GitHub repository's main page, then download the ZIP file from “Download ZIP”.
 
 <div style="page-break-before:always"></div>
 
 ### Evaluation procedure using the AISI preset evaluation dataset
 
-1. [Only for re-setup] If any of the following containers are running, stop them and delete all four containers
+1. [Only for re-setup] If any of the following containers are running, stop them and delete all containers
     - postgresdb container
     - frontend container
     - fastapi container
     - init-db container
+    - manager-backend container (* May exist if the Automated Red Teaming was used prior to the re-setup)
+    - llm-evaluation-system-automated-rt-app-1 container (* May exist if the Automated Red Teaming was used prior to the re-setup)
+    - llm-eval-(number) container (e.g., llm-eval-18001) (* May exist if the Automated Red Teaming was used prior to the re-setup)
 
 2. [First time only] Please extract the downloaded AI Safety Evaluation Environment source code package to any folder of your choice.
 
@@ -67,17 +70,17 @@ Open the terminal (for Windows, PowerShell) and execute the following command to
     - From this point onward, all evaluation-related operations will be performed in the browser. While terminal operations will no longer be necessary, we recommend keeping the terminal open to periodically check the displayed information, as relevant details will be updated throughout the evaluation process
 
 5. [First time only] Click the **Initialize DB** button. This initializes the database used internally by the AI Safety Evaluation Environment and loads the AISI preset evaluation dataset.
-    - **If you are already using the AI Safety Evaluation Environment and do not need to initialize the database, please do not click the **Initialize DB** button. If pressed, all data from previous usage will be deleted.**
+    - **If you are already using the AI Safety Evaluation Environment and do not need to initialize the database, please do not click the **Initialize DB** button. If pressed, all data generated from previous usage will be permanently deleted.**
 
 6. [First time only] Move from the **Initial Screen for Evaluation Definers Screen** to the **Evaluation Definition Management Screen**, enter an arbitrary evaluation content definition name (e.g., aisi_preset), check **Use AISI Preset** for all 10 criteria, and click the **Register Evaluation Definition** button and return to the **Initial Screen for Evaluation Definers** screen.
 
-7. [First time only] Move from the **Initial Screen for Evaluation Definers Screen** to the **AI Model Registration and Update Screen**, enter an arbitrary AI Information Label (e.g., my_ai_info_1), enter the AI Model Name (e.g., gpt-5-mini), URL (e.g., https://api.openai.com/v1/), API key (e.g., sk-****************** **), then click the **Register** button. If using two or more AI information, register each one separately. After registering all AI information, return to the Home screen.
+7. [First time only] Move from the **Initial Screen for Evaluation Definers Screen** to the **AI Model Registration and Update Screen**, enter an arbitrary AI Information Label (e.g., my_ai_info_1), enter the AI Model Name (e.g., gpt-5-mini), URL (e.g., https://api.openai.com/v1/), API key (e.g., sk-********************), then click the **Register** button. If using two or more AI information, register each one separately. After registering all AI information, return to the Home screen.
 
 8. On the home screen, clicking the **Initial Screen for Evaluators Screen** button will navigate you to the **Initial Screen for Evaluators** screen. From there, select the AI information to be evaluated, the AI information for evaluation judgment, and the evaluation content definition (registered by specifying an AISI preset), enter an arbitrary evaluation identification label (e.g., eval_001), and click the **Execute Evaluation** button to transition to the **Evaluation Execution Screen**.
 
 9. Evaluation Execution Screen: Please conduct both quantitative and qualitative evaluations as follows. After completing both evaluations, the **Display Evaluation Results** button will appear at the bottom of the screen. Please click it.
     - **Quantitative Evaluation:** Since this runs in the background, please wait until the screen display changes from **Running** to **Completed**. Even while waiting, you can enter responses for the next qualitative evaluation.
-    - **Qualitative Evaluation:** For each verification item displayed on the screen, select one of the four options: **No Problem** / **Partially Problematic** / **Problematic** / **Not Applicable**. Since **Not Applicable** is the default value, do not change the default for verification items unrelated to the AI system being evaluated. After answering all items, click the **Register Qualitative Results** button.
+    - **Qualitative Evaluation:** For each verification item displayed on the screen, select one of the four options: **No Problem** / **Partially Problematic** / **Problematic** / **Not Applicable**. Since **Not Applicable** is set as the default value, verification items that are not relevant to the AI system under evaluation should remain unchanged. After answering all items, click the **Register Qualitative Results** button.
     - Clicking the **Display Evaluation Results** button will take you to the Evaluation Results Summary screen.
 
 10. Evaluation Results Summary Screen: Review the summary of evaluation results using radar charts and other visualizations. To view detailed results, click the **Go to Detail Screen** button to proceed to the **Evaluation Results Detail (By Perspective)**.
@@ -101,15 +104,14 @@ This section provides an overview of each screen in the AI Safety Evaluation Too
 ![Function Selection](images-en/Home-1.png)
 
 - **Function Description:**  
-  This screen functions as a selection interface, directing users to either the "Initial Screen for Evaluation Definers" or the "Initial Screen for Evaluators", based on tool user’s assigned roles. Additionally, a navigation button is available for launching the separate "Automated Red Teaming Tool" (hereafter referred to as the "Auto RT Tool"). Please note that detailed explanation about the Auto RT Tool is not included in this document.
-At the top of the screen, a list of screen transitions labeled "Home," a button to switch languages, and the title of this service are displayed.<br>
+  This screen functions as a selection interface, directing users to either the "Initial Screen for Evaluation Definers" or the "Initial Screen for Evaluators", based on tool user’s assigned roles. Additionally, a navigation button is available for launching the separate "Automated Red Teaming Tool". For detailed information on the Automated Red Teaming Tool, refer to [Automated Red Teaming Manual](rt-en.md). At the top of the screen, a list of screen transitions labeled "Home," a button to switch languages, and the title of this service are displayed.<br>
 (*) Clicking the "Initrialize DB" button will initialize all saved databases. Please be careful not to click this button unintentionally.
 
 
 - **Main Operation Steps:**
   1. **Select a Function Based on User Roles:** Click either the "Initial Screen for Evaluation Definers" or the "Initial Screen for Evaluators", button, depending on user’s assigned role.
   2. **Screen Transition:** The system navigates to the corresponding initial screen based on the selected role.
-  3. **Launch the Auto RT Tool:** Click the "Automated Red Teaming Tool" button to move to the Automated RT tool screen. If the screen transition fails, an alert will be displayed. For more information, refer to [Automated Red Teaming Manual](rt-en.md).
+  3. **Launch the Automated Red Teaming Tool:** Click the "Automated Red Teaming Tool" button to move to the Automated Red Teaming Tool screen. If the screen transition fails, an alert will be displayed. For more information, refer to [Automated Red Teaming Manual](rt-en.md).
   4. **Language Switching:** Use the "Japanese/English" toggle button located at the top of the screen to switch the display language.
 
 ---
@@ -144,7 +146,8 @@ At the top of the screen, a list of screen transitions labeled "Home," a button 
 
   1. **Enter Dataset Name:** Enter any name in the "Dataset Name" field. Since the entered dataset name will appear in later processes, it is recommended to use a descriptive name that clearly identifies the dataset. 
   2. **Upload File:** Select the file to be registered at the "Upload CSV file" field. Although it states "CSV files" in the field, Parquet format datasets can also be uploaded as mentioned above. However, please note that multiple files cannot be registered at once. <br>(*) If your browser's language setting is Japanese, "ファイルを選択" will be displayed. In this case, it will not be changed to English with this tool.
-  3. **Input Perspective Information (Optional):** Enter evaluation perspective information as necessary. Check "Input Perspective Information" to display a list of perspective, then select the desired evaluation perspective.
+  3. **Input Perspective Information:** If the evaluation perspective information is not included in the columns of the input data, you can enter the evaluation perspective information in this field. Check "Input Perspective Information" to display a list of perspective, allowing you to select your desired evaluation perspective. For details on the format of the input data columns, please refer to [Appendix](appendix-en.md).
+
 ![Aspect_Information](images-en/Aspect_Information-5.png)
   4. **Click the Register Button:** Check all entered information, then click the "Register" button to complete the dataset registration.
 
@@ -255,8 +258,8 @@ At the top of the screen, a list of screen transitions labeled "Home," a button 
   This screen serves as the main interface for evaluators, providing access to essential functions such as configuring evaluation settings, executing evaluation tasks, and reviewing results.
 - **Main Operation Steps:**
   1. On the Initial Screen for Evaluators Screen, set the following parameters.
-     - **AI Information of Target AI:** Select the AI model to be evaluated from the dropdown menu.
-     - **AI Information of judge AI:** Select the AI model to be used for scoring and evaluation judgment.
+     - **AI Information of Target AI:** From the dropdown menu, select the AI information to be evaluated for the AI Safety Evaluation. Typically, the evaluation targets are AI models/AI systems used in business operations, and corresponding AI information should be selected. It is also possible to evaluate commonly used AI models such as OpenAI's gpt-5 or gpt-5-mini.
+     - **AI Information of judge AI:** From the dropdown menu, select the AI information to be used for evaluation in the AI Safety Evaluation. For evaluation purposes, it is desirable to use AI models that are commonly employed and provide a reasonably high level of performance, such as OpenAI's gpt-5 or gpt-5-mini. Select the AI information corresponding to these models.
      - **Evaluation Definition:** Choose an evaluation definition from the dropdown list. Definitions available here are those configured on the "Evaluation Definition Creation"  screen. 
      - **Evaluation Name:** Enter a label to identify the evaluation. This label will appear when viewing results, so it is recommended to use a descriptive name that clearly reflects the evaluation content.
   2. After configuring all parameters, click the "Execute Evaluation" button to start the evaluation. The system will automatically transition to the Evaluation Execution Screen.
@@ -277,7 +280,7 @@ At the top of the screen, a list of screen transitions labeled "Home," a button 
   1. The progress of quantitative evaluations is displayed as "Running" while the evaluation is being conducted, and as "Completed" once the evaluation is complete.
   2. The qualitative evaluation items defined in the selected evaluation configuration will be displayed. For each item, select the most appropriate response based on the item’s content.
   3. After selecting responses for all items, click the "Register Qualitative Results" button to submit the qualitative evaluation results.
-  4. Once both the quantitative evaluation is completed and the qualitative results have been registered, the "Display Evaluation Results" button will become visible.
+  4. Once both the quantitative evaluation is completed and the qualitative results have been registered, the "Display Evaluation Results" button will become visible at the bottom of the screen.
   5. Click the "Display Evaluation Results" button to navigate to the Evaluation Results Summary Screen, where you can review the evaluation outcomes.
 
 ---
@@ -293,7 +296,7 @@ At the top of the screen, a list of screen transitions labeled "Home," a button 
 
 - **Function Description:**  
   　This screen displays the results of both quantitative and qualitative evaluations. It consists of three main sections.
-  - **Top Section:** A radar chart visualizes the evaluation results across the ten categories defined in the Guide to Evaluation Perspectives on AI Safety. 
+  - **Top Section:** A radar chart visualizes the evaluation results across the ten evaluation perspectives defined in the Guide to Evaluation Perspectives on AI Safety. 
   - **Middle Section:** This section shows the detailed content of the current evaluation, including quantitative scores and qualitative judgments.
   - **Bottom Section:** A table displays the results of previous evaluations for reference and comparison.
 
@@ -330,16 +333,16 @@ At the top of the screen, a list of screen transitions labeled "Home," a button 
 ![Evaluation Results Detail (By Perspective) Screen](images-en/Result_Detail-24.png)
 
 - **Function Description:**  
-  This screen displays detailed evaluation results for each of the ten categories defined in the Guide to Evaluation Perspectives on AI Safety.
+  This screen displays detailed evaluation results for each of the ten evaluation perspectives defined in the Guide to Evaluation Perspectives on AI Safety.
 Each category represents a specific perspective used to assess the AI system’s performance.
 - **Main Operation Steps:**
   1. For each of the ten evaluation perspectives, click the dropdown menu to expand and view detailed evaluation results, including the following items:
-     - **Sub Category:** Displayed only when an AISI preset is used in the evaluation definition. Shows the evaluation category defined by the preset. 
-     - **Evaluation Content:** Displayed only when an AISI preset is used. If the classification is quantitative evaluation, the evaluation content from the AISI presets is broken down and used as input for the LLM to generate the evaluation content. If the classification is qualitative evaluation, the evaluation items answered in the evaluation execution screen are displayed.
+     - **Sub Category:** Displayed only when an AISI preset is used in the evaluation definition. Shows the evaluation category defined in the AISI preset. 
+     - **Evaluation Content:** Displayed only when an AISI preset is used. For each evaluation perspective, this indicates what content is being evaluated. When the classification is quantitative evaluation, the displayed evaluation content is compared with the responses from the target AI model/AI system to evaluate validity, and the resulting evaluation outcome becomes the score. When the classification is qualitative evaluation, the content equivalent to the evaluation perspective is displayed.
      - **Category:** Indicates whether the evaluation item is part of quantitative or qualitative evaluation.
-     - **Question:** If the classification is quantitative evaluation, the evaluation content used as input for the LLM is displayed. If the classification is qualitative evaluation, the evaluation items answered on the evaluation execution screen are displayed.
-     - **Answer:** Displays the AI-generated or evaluator-entered response for each item.
-     - **Score:** Displays the score assigned to each response based on the evaluation items.
+     - **Question:** If the classification is quantitative evaluation, the evaluation content used as input to the AI model/AI system being evaluated is displayed. If the classification is qualitative evaluation, the evaluation items answered on the evaluation execution screen are displayed.
+     - **Answer:** Displays the responses for each evaluation perspective. For quantitative evaluations, displays the responses from the evaluated AI model/AI system. For qualitative evaluations, displays the responses entered on the Evaluation Execution Screen.
+     - **Score:** Displays the score assigned to each response based on the evaluation perspectives. Please note that the scores displayed in this scoring section are base scores. Therefore, the total score across evaluation perspectives and the radar chart displayed on the evaluation summary screen may not necessarily match.
   2. To generate a report, click the "Create Report" button located at the top of the screen. This will navigate you to the Evaluation Result Report Screen.
   3. Click the "Export as JSON" button located at the top of the screen to download the evaluation results JSON file. For details on the contents of the downloadable JSON file, refer to [Appendix](appendix-en.md)
 

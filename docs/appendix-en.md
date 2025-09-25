@@ -34,11 +34,11 @@ Any columns other than the required will be ignored, even if they exist within t
   - Requirements (scorer=requirement)
     | id | ten_perspective                | text         | requirement                | scorer     |
     |----|-------------------------------|--------------|----------------------------|------------|
-    | 1  | Mitigation high-risk and unauthorized use | Input to AI | Requirement for AI output | requirement |
+    | 1  | Addressing High-risk Use and Unintended Use | Input to AI | Requirement for AI output | requirement |
   - Multiple-Choice (scorer=multiplechoice)
     | id | ten_perspective      | text         | ans0      | ans1      | ans2      | ans3      | output   | scorer        |
     |----|----------------------|--------------|-----------|-----------|-----------|-----------|----------|--------------|
-    | 1  | Fairness and Inclusivity  | Input to AI | Option A  | Option B  | Option C  | Option D  | Expected answer(alphabet of choice) | multiplechoice |
+    | 1  | Fairness and Inclusion  | Input to AI | Option A  | Option B  | Option C  | Option D  | Expected answer(alphabet of choice) | multiplechoice |
   - In the case of semantic equivalence (no scorer specified or model_graded_qa)
     | id | ten_perspective         | text         | output   |
     |----|------------------------|--------------|----------|
@@ -68,7 +68,7 @@ AI models/AI systems registered in the AI Model Registration and Update Screen o
 
   ```json
   {
-    "model": "gpt-4o-mini",
+    "model": "gpt-4o",
     "messages": [
       { "role": "system", "content": "You are a capable assistant." },
       { "role": "user", "content": "Tell me the weather in Tokyo for tomorrow." }
@@ -82,7 +82,7 @@ AI models/AI systems registered in the AI Model Registration and Update Screen o
   }
   ```
 
-  - **model**: [ Required ] The name of the model to use (`gpt-4o-mini`／`gpt-4o`／`gpt-3.5-turbo`／ etc)
+  - **model**: [ Required ] The name of the model to use (`gpt-5-mini`／`gpt-4o`／`gpt-3.5-turbo`／ etc)
   - **messages**: [ Requred ] A list of message objects representing the conversation so far. Each object must include.
     - **role**: `system`／`user`／`assistant`
     - **content**: The text content of the message.
@@ -101,7 +101,7 @@ AI models/AI systems registered in the AI Model Registration and Update Screen o
     "id": "chatcmpl-7XyZAbCdEfGhIjK",
     "object": "chat.completion",
     "created": 1710000000,
-    "model": "gpt-4o-mini",
+    "model": "gpt-4o",
     "usage": {
       "prompt_tokens": 25,
       "completion_tokens": 40,
@@ -143,7 +143,7 @@ AI models/AI systems registered in the AI Model Registration and Update Screen o
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
     -d '{
-      "model": "gpt-4o-mini",
+      "model": "gpt-4o",
       "messages": [
         {"role": "system",  "content": "You are a capable assestant."},
         {"role": "user",    "content": "Please tell me a pasta recipe."}
@@ -160,7 +160,7 @@ AI models/AI systems registered in the AI Model Registration and Update Screen o
 As an example, here is how to register AI information for evaluation using this tool, specifically for AI deployed locally using the combination of LM Studio and open-ai/gpt-oss-20b.
 
   1. Install LM Studio as a Developer, start the server from the Developer screen, and make it ready to accept API requests.
-     - For example, if the IP address is "192.168.10.13" and the port is "1234", the base URL becomes  "http://192.168.10.13:1234/v1/".
+     - For example, if the IP address is "192.168.10.13" and the port is "1234", the base URL becomes "http://192.168.10.13:1234/v1/".
      - For detailed instructions on using LM Studio, refer to the LM Studio website.
   2. On the "AI Model Registration and Update" screen, click the "AI Information Update" button to update the AI model as follows:
      - **AI Information Label:** Enter any identifying name. (Example: ai_local_gpt-oss-20b)
