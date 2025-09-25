@@ -4,7 +4,7 @@
 
 # Introduction
 
-The AI Safety Evaluation Environment is an evaluation tool and evaluation dataset designed to support AI safety evaluation based on the "Guide to Evaluation Perspectives on AI Safety" provided by Japan AI Safety Institute (hereinafter referred to as "AISI"). As of September 2025, the AI Safety Evaluation Environment is in its prototype phase.
+Japan AI Safety Institute (hereinafter referred to as "AISI") introduces an AI Safety Evaluation Environment that provides an evaluation tool and evaluation dataset designed to support AI safety evaluation based on the "Guide to Evaluation Perspectives on AI Safety". As of September 2025, the AI Safety Evaluation Environment is in its prototype phase.
    - This tool is provided to assist in evaluation work. Results obtained using specific datasets (e.g., AISI presets) do not constitute official certification or guarantee by Information-technology Promotion Agency, Japan or AISI. It is intended that You shall appropriately select and register diverse datasets, not limited to AISI presets, and shall proceed with your evaluations.
 
 # Disclaimer
