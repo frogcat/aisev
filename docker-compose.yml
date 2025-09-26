@@ -48,6 +48,8 @@ services:
       DB_HOST: postgresdb
       DB_PORT: 5432
       DB_NAME: mydb
+      OLLAMA_BASE_URL: http://default-litellm-service:4000/
+      LOG_LEVEL: DEBUG
     working_dir: /app
     volumes:
       - ./backend:/app
