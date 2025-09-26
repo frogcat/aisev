@@ -99,7 +99,7 @@ def new_eval_by_ten_perspective(df: pd.DataFrame, target_model_name: str, scorer
                 task = Task(dataset=samples, solver=[
                             generate()], scorer=scorer)
             eval_result = eval(task, model=target_model_name,
-                               log_format="json", log_dir=str(inspect_ai_log_dir))
+                               log_format="json", log_dir=str(inspect_ai_log_dir), log_level="debug")
             # Add GSN information to eval_results[0][sample]
             # eval_log = eval_log_json_str(eval_result[0])
             eval_log = json.loads(eval_log_json_str(eval_result[0]))
