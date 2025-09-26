@@ -67,4 +67,14 @@ OpenAI 以外の LLM を使用するための方法をまとめます。
 - ※2: 内部的には使用されないので、適当な URL を指定します
 - ※3: 内部的には使用されないので、適当な文字列を指定します
 
+## Notice
+
+本家の aisev では [inspec_ai の eval](https://inspect.aisi.org.uk/reference/inspect_ai.html) を実行する際に
+WebUI で指定した **AIモデル名** ではなく、別の名前が渡されるという問題があります。
+
+この fork では **Web UI で指定した AI モデル名** が使用されるように以下の変更を加えています。
+このドキュメントの方法を試す場合には、本家 aisev ではなくこの fork を使用する必要があることに注意してください。
+
+<https://github.com/frogcat/aisev/commit/ca3b4e65575486536a8defccabffa85c4cc13a03>
+
 (以上)
