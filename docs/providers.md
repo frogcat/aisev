@@ -1,8 +1,8 @@
-# About
+# Model Providers
 
-OpenAPI 以外の LLM を使用するための方法をまとめます。
+OpenAI 以外の LLM を使用するための方法をまとめます。
 
-# 基本方針
+## Overview
 
 <https://inspect.aisi.org.uk/providers.html> は
 [inspect_ai](https://inspect.aisi.org.uk/) でさまざまな LLM を使用するためのガイドです。
@@ -13,15 +13,15 @@ OpenAPI 以外の LLM を使用するための方法をまとめます。
 パッケージの追加は `backend/requirements.txt` に、
 環境変数の追加は `docker-compose.yml` の中の `services > fastapi > environment` 配下に項目を追加します。
 
-# 参考: Ollama の事例
+## Example: Ollama
 
-## 1. パッケージの追加
+### 1. パッケージの追加
 
 <https://inspect.aisi.org.uk/providers.html#ollama> によると
 `openai` パッケージが必要です。
 ただし、`backend/requirements.txt` にはすでに `openai` が含まれているのでこの作業は不要です。
 
-## 2. 環境変数の追加
+### 2. 環境変数の追加
 
 <https://inspect.aisi.org.uk/providers.html#ollama> によると
 `OLLAMA_BASE_URL` を指定する必要があります。
@@ -49,7 +49,7 @@ OpenAPI 以外の LLM を使用するための方法をまとめます。
 (攻略)
 ```
 
-## 3. WebUI での作業
+### 3. WebUI での作業
 
 `docker compose build` と `docker compose up` を実行した上で
 [AI 情報登録・管理](http://localhost:5173/model-management?from=definer-home) を開きます。
