@@ -257,14 +257,14 @@ class EvaluationResultsManager:
             api_url=target_model.url,
             api_key=target_model.api_key
         )
-        target_model_name = f"{target_model_alias}/{target_model.model_name}"
+        target_model_name = target_model.model_name
 
         eval_model_alias = register_in_inspect_ai(
             model_name=eval_model.model_name,
             api_url=eval_model.url,
             api_key=eval_model.api_key
         )
-        eval_model_name = f"{eval_model_alias}/{eval_model.model_name}"
+        eval_model_name = eval_model.model_name
 
         logger.info(f"Target model: {target_model_name}")
         logger.info(f"Evaluation model: {eval_model_name}")
