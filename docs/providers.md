@@ -46,7 +46,7 @@ OpenAI 以外の LLM を使用するための方法をまとめます。
       DB_NAME: mydb
       OLLAMA_BASE_URL: http://ollama:4000/
       LOG_LEVEL: DEBUG
-(攻略)
+(後略)
 ```
 
 ### 3. WebUI での作業
